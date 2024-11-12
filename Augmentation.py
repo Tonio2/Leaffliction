@@ -14,7 +14,7 @@ def rotate(src):
 
 
 def blur(src):
-    return cv2.GaussianBlur(src, (9, 9), 0)
+    return cv2.GaussianBlur(src, (9, 9), 1)
 
 
 def contrast(src):

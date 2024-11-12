@@ -22,7 +22,6 @@ def render(fruit_type, label, size):
 def is_dir(dirname, d):
     return os.path.isdir(os.path.join(dirname, d))
 
-
 def main(root_dir):
     fruit_dictionary = {}
     dirnames = [d for d in os.listdir(root_dir) if is_dir(root_dir, d)]
