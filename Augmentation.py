@@ -3,7 +3,7 @@ import numpy as np
 import sys
 import os
 
-params = ["Rotate", "Blur", "Contrast", "Flip", "Projective", "Zoom"]
+params = ["Rotate", "Blur", "Contrast", "Flip", "Projective", "Scale"]
 
 
 def rotate(src):
@@ -50,7 +50,16 @@ def projective_transformation(src):
     output_size = (h, w)
     return cv2.warpPerspective(src, matrix, output_size)
 
+def scale(src):
+    scale_factor = 1.2
+    height, width = src.shape[:2]
+    scaled_image = cv2.resize(src, None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_LINEAR)
+    start_x = (scaled_image.shape[1] - width) // 2
+    start_y = (scaled_image.shape[0] - height) // 2
+    cropped_image = scaled_image[start_y:start_y + height, start_x:start_x + width]
+    return cropped_image
 
+# Careful: You should not resize images because the encoder needs a fixed size.
 def zoom(src):
     return cv2.resize(src, None, fx=5, fy=5, interpolation=cv2.INTER_NEAREST)
 
@@ -67,7 +76,8 @@ ft_map = {
     "Projective": projective_transformation,
     "Zoom": zoom,
     "Hue_Adjustment": hue_adjustment,
-    "Illumination": illumination
+    "Illumination": illumination,
+    "Scale": scale
 }
 
 
