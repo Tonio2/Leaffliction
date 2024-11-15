@@ -3,7 +3,7 @@ import numpy as np
 import sys
 import os
 
-params = ["Rotate", "Blur", "Contrast", "Flip", "Projective", "Zoom"]
+params = ["Rotate", "Blur", "Contrast", "Flip", "Projective", "Scale"]
 
 
 def rotate(src):
@@ -50,7 +50,16 @@ def projective_transformation(src):
     output_size = (h, w)
     return cv2.warpPerspective(src, matrix, output_size)
 
+def scale(src):
+    scale_factor = 1.2
+    height, width = src.shape[:2]
+    scaled_image = cv2.resize(src, None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_LINEAR)
+    start_x = (scaled_image.shape[1] - width) // 2
+    start_y = (scaled_image.shape[0] - height) // 2
+    cropped_image = scaled_image[start_y:start_y + height, start_x:start_x + width]
+    return cropped_image
 
+# Careful: You should not resize images because the encoder needs a fixed size.
 def zoom(src):
     return cv2.resize(src, None, fx=5, fy=5, interpolation=cv2.INTER_NEAREST)
 
@@ -67,7 +76,8 @@ ft_map = {
     "Projective": projective_transformation,
     "Zoom": zoom,
     "Hue_Adjustment": hue_adjustment,
-    "Illumination": illumination
+    "Illumination": illumination,
+    "Scale": scale
 }
 
 
@@ -89,26 +99,39 @@ def augmentation(src):
 def is_dir(dirname, d):
     return os.path.isdir(os.path.join(dirname, d))
 
+def setup(dir_path, output_dir = "$HOME/goinfre"):
+    output_dir = os.path.expandvars(output_dir)
+    new_dir = os.path.join(output_dir, "augmented_directory")
+
+    print("rm -rf " + new_dir)
+    os.system("rm -rf " + new_dir)
+    
+    print("cp -r " + dir_path + " " + new_dir)
+    os.system("cp -r " + dir_path + " " + new_dir)
+    return new_dir
+
 
 def main(dirname):
-    # Copy directory to new directory "augmented_directory"
-    new_dir = "/mnt/nfs/homes/alabalet/goinfre/augmented_directory"
-    print("cp -r " + dirname + " " + new_dir)
-    os.system("cp -r " + dirname + " " + new_dir)
+    new_dir = setup(dirname)
 
     dirs = [d for d in os.listdir(new_dir) if is_dir(new_dir, d)]
-    print(dirs)
     dir_size = [len(os.listdir(os.path.join(new_dir, d))) for d in dirs]
-    print(dir_size)
-    max_dir_size = max(dir_size)
+    max_dir_size = 7 * (min(dir_size))
+    
+    print(f"Found {len(dirs)} directories:")
+    for d, s in zip(dirs, dir_size):
+        print(f"Directory {d} has {s} images.")
+    print(f"Let's augment them to have {max_dir_size} images per directory.")
 
     for d in dirs:
+        print(f"Augmenting {d}...")
         idx = 0
-        img_list = os.listdir(os.path.join(new_dir, d))
+        img_dir = os.path.join(new_dir, d)
+        img_list = os.listdir(img_dir)
         dir_size = len(img_list)
-        while dir_size + 6 * idx <= max_dir_size:
-            img = os.path.join(new_dir, d, img_list[idx])
-            print(img)
+        
+        while dir_size + 6 * idx <= max_dir_size and idx < dir_size:
+            img = os.path.join(img_dir, img_list[idx])
             modifs = augmentation(img)
             for key, value in modifs.items():
                 save_path = img.split(".JPG")[0] + key
@@ -117,20 +140,25 @@ def main(dirname):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2 and len(sys.argv) != 3:
-        print("Usage: python Augmentation.py <image_path> | " +
-              "python Augmentation.py --dir <dirname>")
+    if len(sys.argv) != 2:
+        print("Usage: python Augmentation.py <image_path | dir_path>")
         sys.exit(1)
-    if len(sys.argv) == 2:
-        src = sys.argv[1]
-        modifs = augmentation(src)
+
+    if len(params) != 6:
+        print("Please provide 6 augmentations in the params list.")
+        sys.exit(1)
+
+    path = sys.argv[1]
+    print(f"Augmentations are {', '.join(params)}.")
+    print("You can change them in the params list.")
+    if not os.path.exists(path):
+        print(f"Path {path} does not exist.")
+        sys.exit(1)
+
+    if os.path.isfile(path):
+        modifs = augmentation(path)
         for key, value in modifs.items():
-            save_path = os.path.basename(src).split(".JPG")[0] + key
+            save_path = os.path.basename(path).split(".JPG")[0] + key
             cv2.imwrite(save_path, value)
-    elif len(sys.argv) == 3:
-        if sys.argv[1] != "--dir":
-            print("Usage: python Augmentation.py <image_path> | " +
-                  "python Augmentation.py --dir <dirname>")
-            sys.exit(1)
-        dirname = sys.argv[2]
-        main(sys.argv[2])
+    elif os.path.isdir(path):
+        main(path)
