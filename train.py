@@ -7,6 +7,19 @@ import matplotlib.pyplot
 from sklearn.model_selection import train_test_split
 import Augmentation
 import cv2
+from transfo2 import gaussian_blur, mask_objects
+
+def count(set):
+    counts = {
+        'Apple_healthy': 0,
+        'Apple_scab': 0,
+        'Apple_Black_rot': 0,
+        'Apple_rust': 0,        
+    }
+    for img, label in set:
+        counts[label] += 1
+        
+    print(counts)
 
 def call_augmentation(local_dir, name_dir):
 
@@ -54,30 +67,43 @@ def dataset(dirname):
         print("Permission denied: Unable to create dataset.")
     except Exception as e:
         print(f"An error occurred: {e}")
-    
-    print(dirname)
+        
     dirs = [d for d in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, d))]
     array = []
     for d in dirs:
         for img in os.listdir(os.path.join(dirname, d)):
             array.append((os.path.join(dirname, d, img), d))
-            
     
-
-    X_training, X_test = train_test_split(array, train_size=0.85, random_state=42)
-    print(X_training)
-    counts = {
-        'Apple_healthy': 0,
-        'Apple_scab': 0,
-        'Apple_Black_rot': 0,
-        'Apple_rust': 0,        
-    }
-    for img, label in X_training:
-        counts[label] += 1
+    count(array)
         
-    print(counts)
-    # X_training = call_augmentation(X_training, "training")
-    # X_train, X_validation = train_test_split(X_training, test_size=0.8, train_size=None, random_state=42, shuffle=True, stratify=None)
+    # Transformation
+    for img in array:
+        img_path, label = img
+        img = cv2.imread(img_path)
+        img = gaussian_blur(img)
+        img = mask_objects(img)
+        cv2.imwrite(img_path, img)
+        print(f"Transformed {img_path}")
+    
+    # Normalize
+    
+    # Labelize
+    
+    # Split
+    # dirs = [d for d in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, d))]
+    # array = []
+    # for d in dirs:
+    #     for img in os.listdir(os.path.join(dirname, d)):
+    #         array.append((os.path.join(dirname, d, img), d))
+            
+    # X_training, X_test = train_test_split(array, train_size=0.85, random_state=42)
+    # X_train, X_validation = train_test_split(X_training, test_size=0.15, random_state=42)
+    
+    # Define model
+    
+    # Train model
+    
+    # Evaluate model
 
 
 # def encoder():

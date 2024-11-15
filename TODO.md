@@ -8,3 +8,7 @@
     - pseudo landmarks : https://plantcv.readthedocs.io/en/stable/homology_x_axis_pseudolandmarks/
     - gray scale : https://plantcv.readthedocs.io/en/stable/tutorials/simple_rgb_tutorial/
     - analyze image : https://plantcv.readthedocs.io/en/stable/tutorials/roi_tutorial/
+
+# Hyperparameters:
+    - Split before Augmentation
+    - Keep the same muber of original images in each dir
