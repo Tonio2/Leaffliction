@@ -7,7 +7,7 @@ import matplotlib.pyplot
 from sklearn.model_selection import train_test_split
 import Augmentation
 import cv2
-from transfo2 import gaussian_blur, mask_objects
+from transfo2 import gaussian_blur, mask_objects, remove_black
 
 def count(set):
     counts = {
@@ -80,8 +80,9 @@ def dataset(dirname):
     for img in array:
         img_path, label = img
         img = cv2.imread(img_path)
-        img = gaussian_blur(img)
-        img = mask_objects(img)
+        mask = gaussian_blur(img)
+        img = mask_objects(img, mask)
+        img = remove_black(img)
         cv2.imwrite(img_path, img)
         print(f"Transformed {img_path}")
     

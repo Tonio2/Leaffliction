@@ -4,10 +4,21 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
+def green(img):
+    mask, masked_img = pcv.threshold.custom_range(img, lower_thresh=[0, 0, 0], upper_thresh=[0, 255, 0], channel='RGB')
+    return mask
+
+def red(img):
+    mask, masked_img = pcv.threshold.custom_range(img, lower_thresh=[0, 0, 0], upper_thresh=[255, 0, 0], channel='RGB')
+    return mask
+
+def blue(img):
+    mask, masked_img = pcv.threshold.custom_range(img, lower_thresh=[0, 0, 0], upper_thresh=[0, 0, 255], channel='RGB')
+    return mask
 
 def gaussian_blur(img):
-    a_gray = pcv.rgb2gray_lab(rgb_img=img, channel="a")
-    bin_mask = pcv.threshold.otsu(gray_img=a_gray, object_type="dark")
+    a_gray = pcv.rgb2gray_hsv(rgb_img=img, channel="h")
+    bin_mask = pcv.threshold.binary(gray_img=a_gray, threshold=100, object_type="dark")
     cleaned_mask = pcv.fill(bin_img=bin_mask, size=50)
     return cleaned_mask
 
@@ -15,9 +26,15 @@ def mask_objects(img, mask):
     masked = pcv.apply_mask(img=img, mask=mask, mask_color="white")
     return masked
 
+def remove_black(img):
+    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    _, mask = cv2.threshold(gray_img, 20, 255, cv2.THRESH_BINARY)
+    masked = pcv.apply_mask(img=img, mask=mask, mask_color="white")
+    return masked
+
 def roi(img, mask):
     roi_image = img.copy()
-    roi_image[mask != 0] = (0, 255, 0)
+    roi_image[mask != 5] = (0, 255, 0)
     x, y, w, h = cv2.boundingRect(mask)
     roi_image = cv2.rectangle(roi_image, (x, y), (x + w, y + h), (255, 0, 0), 2)
     return roi_image
@@ -90,24 +107,35 @@ def main(img_path, output):
 
     # Read image
     img, path, filename = pcv.readimage(filename=img_path)
-
+    
+    # Get colorspqce
+    colorspace_img = pcv.visualize.colorspaces(rgb_img=img)
+    print_image(colorspace_img, "colorspace.jpg")
+    
     cleaned_mask = gaussian_blur(img)
     print_image(cleaned_mask, "cleaned_mask.jpg")
 
     masked_img = mask_objects(img, cleaned_mask)
     print_image(masked_img, "masked_img.jpg")
+    
+    withouth_black = remove_black(masked_img)
+    print_image(withouth_black, "without_black.jpg")
 
-    roi_img = roi(masked_img, cleaned_mask)
-    print_image(roi_img, "roi.jpg")
+    # roi_img = roi(masked_img, cleaned_mask)
+    # print_image(roi_img, "roi.jpg")
 
-    shape_img = analyze_object(img, cleaned_mask)
-    print_image(shape_img, "shape_img.jpg")
+    # shape_img = analyze_object(img, cleaned_mask)
+    # print_image(shape_img, "shape_img.jpg")
 
-    pseudolandmarks_img = create_pseudolandmarks_image(img, cleaned_mask)
-    print_image(pseudolandmarks_img, "pseudolandmarks_img.jpg")
+    # pseudolandmarks_img = create_pseudolandmarks_image(img, cleaned_mask)
+    # print_image(pseudolandmarks_img, "pseudolandmarks_img.jpg")
 
-    color_img = analyze_color(img, cleaned_mask)
-    print(color_img)
+    # color_img = analyze_color(img, cleaned_mask)
+    # print(color_img)
 
-
-main("image.JPG", "output")
+images = ["image.JPG", "image2.JPG", "image3.JPG", "image4.JPG", "image5.JPG"]
+dirs = ["output", "output2", "output3", "output4", "output5"]
+for i, d in zip(images, dirs):
+    if not os.path.exists(d):
+        os.mkdir(d)
+    main(i, d)
