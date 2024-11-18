@@ -1,7 +1,10 @@
 venv/
 myenv/
 *.pyc
+
 images/
+Grape/
+Apple/
 augmented_directory/
 
 output*
