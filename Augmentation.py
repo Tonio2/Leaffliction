@@ -50,6 +50,7 @@ def projective_transformation(src):
     output_size = (h, w)
     return cv2.warpPerspective(src, matrix, output_size)
 
+
 def scale(src):
     scale_factor = 1.2
     height, width = src.shape[:2]
