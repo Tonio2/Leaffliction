@@ -1,9 +1,16 @@
 venv/
 myenv/
 *.pyc
+
 images/
+Grape/
+Apple/
 augmented_directory/
 
 output*
 image*.JPG
 bayes_*/
+
+# Est-ce qu'on laisserait pas les modeles ?
+*.keras 
+conf_matrix.png
