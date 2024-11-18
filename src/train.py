@@ -160,6 +160,9 @@ def evaluate_model(model, X_test, Y_test, class_labels):
     plt.savefig("ROC_curve.png")
     plt.show()
 
+# BROUILLON
+def is_dir(dirname, d):
+        return os.path.isdir(os.path.join(dirname, d))
 
 def main_pipeline(dataset_path):
     """ Full pipeline: data loading, preprocessing, model training, and evaluation """
@@ -179,8 +182,16 @@ def main_pipeline(dataset_path):
     model = build_model(input_shape=X_train.shape[1:], num_classes=len(class_labels) )
     model = train_model(model, X_train, Y_train)
 
+
+    # BROUILLON : get le nom de du fruit 
+
+    # dirnames = [d for d in os.listdir(root_dir) if is_dir(root_dir, d)]
+    # fruit = dirname.split("_")[0]
+
     # Save the model
-    model.save("model.keras")
+    fruit = "Apple"
+    name = fruit + ".keras"
+    model.save(name)
     print(c_green, "Model saved.", c_reset)
 
     # Evaluate the model

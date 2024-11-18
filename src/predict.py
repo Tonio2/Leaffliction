@@ -3,10 +3,14 @@ import sys
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import tensorflow
+import keras
+from keras import ops
 from plantcv import plantcv as pcv
+from train import preprocess_img
 
-     # Hori = np.concatenate((img1, img2), axis=1)
-     # cv2.imshow('Predict', Hori) 
+    # Hori = np.concatenate((img1, img2), axis=1)
+    # cv2.imshow('Predict', Hori) 
     # # plt.imshow(img, cmap='gray')
     # cv2.waitKey(0) 
     # plt.show()
@@ -26,6 +30,16 @@ def render(img1, img2, state):
     plt.tight_layout()
     plt.show()
 
+# def predict(img, fruit):
+
+#     name = fruit + ".model"
+#     reconstructed_model = keras.models.load_model(name)
+#     # Y_pred_prob = reconstructed_model.predict(X_test)
+#     # Y_pred = np.argmax(Y_pred_prob, axis=1)
+#     # Y_test_classes = np.argmax(Y_test, axis=1)
+
+#     np.testing.assert_allclose(model.predict(img), reconstructed_model.predict(img))
+#     return 
 
 def main(src):
     # check if is file
@@ -41,12 +55,12 @@ def main(src):
         print("IN TRY: ALL GOOD WITH THE IMAGE")
 
         # should apply tranfo 
-        img2 = cv2.imread(src)
-        if img2 is None:
-            raise FileNotFoundError(f"Image not found or cannot be read.")
-
+        img2 = preprocess_img(src, img_size=256)
         # send to train to get the result
         state = "Healthy"
+        # fruit = get_fruit()
+        fruit = "Apple"
+        # predict(img1, fruit)
 
         render(img1, img2, state)
 
