@@ -3,3 +3,6 @@ myenv/
 *.pyc
 images/
 augmented_directory/
+
+output*
+image*.JPG

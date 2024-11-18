@@ -4,21 +4,37 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-def green(img):
-    mask, masked_img = pcv.threshold.custom_range(img, lower_thresh=[0, 0, 0], upper_thresh=[0, 255, 0], channel='RGB')
-    return mask
+def select_best_channel(img):
+    # Convert to LAB and CMYK
+    b_channel = pcv.rgb2gray_lab(rgb_img=img, channel="b")
+    y_channel = pcv.rgb2gray_cmyk(rgb_img=img, channel="y")
 
-def red(img):
-    mask, masked_img = pcv.threshold.custom_range(img, lower_thresh=[0, 0, 0], upper_thresh=[255, 0, 0], channel='RGB')
-    return mask
+    # Analyze metrics for both channels
+    metrics = {}
+    for channel_name, channel_data in [("b", b_channel), ("y", y_channel)]:
+        # Edge detection using Sobel
+        edges = cv2.Sobel(channel_data, cv2.CV_64F, 1, 0, ksize=3)
+        edge_variance = np.var(edges)
 
-def blue(img):
-    mask, masked_img = pcv.threshold.custom_range(img, lower_thresh=[0, 0, 0], upper_thresh=[0, 0, 255], channel='RGB')
-    return mask
+        # Intensity contrast (foreground-background separability)
+        hist, _ = np.histogram(channel_data, bins=256, range=(0, 256))
+        intensity_contrast = hist.max() - hist.min()
 
-def gaussian_blur(img):
+        metrics[channel_name] = {
+            "edge_variance": edge_variance,
+            "intensity_contrast": intensity_contrast,
+        }
+
+    # Select channel with highest combined score
+    selected_channel = max(metrics, key=lambda k: metrics[k]["edge_variance"])
+
+    return selected_channel, b_channel if selected_channel == "b" else y_channel
+
+
+def gaussian_blur(img, channel="b"):
     a_gray = pcv.rgb2gray_hsv(rgb_img=img, channel="h")
-    bin_mask = pcv.threshold.binary(gray_img=a_gray, threshold=100, object_type="dark")
+
+    bin_mask = pcv.threshold.binary(gray_img=a_gray, threshold=110, object_type="dark")
     cleaned_mask = pcv.fill(bin_img=bin_mask, size=50)
     return cleaned_mask
 
@@ -115,27 +131,38 @@ def main(img_path, output):
     cleaned_mask = gaussian_blur(img)
     print_image(cleaned_mask, "cleaned_mask.jpg")
 
+    a_gray = pcv.rgb2gray_hsv(rgb_img=img, channel="h")
+    analysis_image = pcv.analyze.grayscale(gray_img=a_gray, labeled_mask=cleaned_mask,
+                                        n_labels=1, bins=100, 
+                                        label="default")
+    print_image(analysis_image, "analysis_image.png")
+
+    selected_channel, channel_name = select_best_channel(img)
+    print(f"Selected channel: {selected_channel}")
+    print_image(channel_name, "channel_name.jpg")
+
     masked_img = mask_objects(img, cleaned_mask)
     print_image(masked_img, "masked_img.jpg")
     
     withouth_black = remove_black(masked_img)
     print_image(withouth_black, "without_black.jpg")
 
-    # roi_img = roi(masked_img, cleaned_mask)
-    # print_image(roi_img, "roi.jpg")
+    roi_img = roi(masked_img, cleaned_mask)
+    print_image(roi_img, "roi.jpg")
 
-    # shape_img = analyze_object(img, cleaned_mask)
-    # print_image(shape_img, "shape_img.jpg")
+    shape_img = analyze_object(img, cleaned_mask)
+    print_image(shape_img, "shape_img.jpg")
 
-    # pseudolandmarks_img = create_pseudolandmarks_image(img, cleaned_mask)
-    # print_image(pseudolandmarks_img, "pseudolandmarks_img.jpg")
+    pseudolandmarks_img = create_pseudolandmarks_image(img, cleaned_mask)
+    print_image(pseudolandmarks_img, "pseudolandmarks_img.jpg")
 
-    # color_img = analyze_color(img, cleaned_mask)
-    # print(color_img)
+    color_img = analyze_color(img, cleaned_mask)
+    print(color_img)
 
-images = ["image.JPG", "image2.JPG", "image3.JPG", "image4.JPG", "image5.JPG"]
-dirs = ["output", "output2", "output3", "output4", "output5"]
-for i, d in zip(images, dirs):
-    if not os.path.exists(d):
-        os.mkdir(d)
-    main(i, d)
+if __name__ == '__main__':
+    images = ["image1.JPG", "image2.JPG", "image3.JPG", "image4.JPG"]
+    dirs = ["output", "output2", "output3", "output4"]
+    for i, d in zip(images, dirs):
+        if not os.path.exists(d):
+            os.mkdir(d)
+        main(i, d)

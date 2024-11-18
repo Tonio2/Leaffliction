@@ -112,7 +112,7 @@ def setup(dir_path, output_dir = "$HOME/goinfre"):
 
 
 def main(dirname):
-    new_dir = setup(dirname)
+    new_dir = setup(dirname, "./")
 
     dirs = [d for d in os.listdir(new_dir) if is_dir(new_dir, d)]
     dir_size = [len(os.listdir(os.path.join(new_dir, d))) for d in dirs]

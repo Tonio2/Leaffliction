@@ -1,13 +1,16 @@
 import sys
 import os
-# import tensorflow
-# import keras
-import numpy
+import tensorflow
+import keras
+import numpy as np
 import matplotlib.pyplot
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from transfo2 import gaussian_blur, mask_objects
 import Augmentation
 import cv2
-from transfo2 import gaussian_blur, mask_objects, remove_black
+from plantcv import plantcv as pcv
+
 
 def count(set):
     counts = {
@@ -75,20 +78,27 @@ def dataset(dirname):
             array.append((os.path.join(dirname, d, img), d))
     
     count(array)
-        
+    
+    list_img = []
     # Transformation
     for img in array:
         img_path, label = img
         img = cv2.imread(img_path)
-        mask = gaussian_blur(img)
-        img = mask_objects(img, mask)
-        img = remove_black(img)
+        img = pcv.rgb2gray(img)
         cv2.imwrite(img_path, img)
-        print(f"Transformed {img_path}")
+        list_img.append((img, label))
+        # print(f"Transformed {img_path}")
     
     # Normalize
+    images = np.array([i[0] for i in list_img], dtype="float32") / 255.0
+    labels = [i[1] for i in list_img]
     
     # Labelize
+    le = LabelEncoder()
+    le.fit(labels)
+    labels_encoder = le.fit_transform(labels)
+    print(labels_encoder)
+
     
     # Split
     # dirs = [d for d in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, d))]
@@ -97,12 +107,36 @@ def dataset(dirname):
     #     for img in os.listdir(os.path.join(dirname, d)):
     #         array.append((os.path.join(dirname, d, img), d))
             
-    # X_training, X_test = train_test_split(array, train_size=0.85, random_state=42)
+    X_training, X_test, Y_train, Y_test = train_test_split(images, labels_encoder, train_size=0.85, random_state=42)
     # X_train, X_validation = train_test_split(X_training, test_size=0.15, random_state=42)
     
     # Define model
-    
+    learning_rate_decay = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2)
+    early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=8, restore_best_weights=True)
+
+    model = keras.models.Sequential([
+        keras.Input(shape=(256,256, 1)),
+
+        keras.layers.Conv2D(filters=32, kernel_size=(3,3), padding="same", activation="relu"),
+        keras.layers.MaxPooling2D(2,2),
+        keras.layers.Dropout(0.3),
+
+        keras.layers.Conv2D(filters=64, kernel_size=(3,3), padding="same", activation="relu"),
+        keras.layers.MaxPooling2D(2,2),
+        keras.layers.Dropout(0.3),
+
+        keras.layers.Flatten(),
+        keras.layers.Dense(128, activation="relu"),
+        keras.layers.Dropout(0.5),
+
+        keras.layers.Dense(4, activation="softmax")
+    ])
+
+    optimizer = keras.optimizers.Adam(learning_rate=0.001)
+    model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"])
+
     # Train model
+    model.fit(x=X_training, y=Y_train, epochs=50, callbacks=[learning_rate_decay, early_stopping], validation_split=0.15)
     
     # Evaluate model
 
