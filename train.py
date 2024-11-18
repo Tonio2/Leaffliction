@@ -10,6 +10,8 @@ from transfo2 import gaussian_blur, mask_objects
 import Augmentation
 import cv2
 from plantcv import plantcv as pcv
+from tensorflow.keras.utils import to_categorical
+
 
 
 def count(set):
@@ -61,16 +63,7 @@ def call_augmentation(local_dir, name_dir):
     #         idx += 1
 
 
-def dataset(dirname):
-    try:
-        os.mkdir("dataset")
-    except FileExistsError:
-        print("Directory 'dataset' already exists.")
-    except PermissionError:
-        print("Permission denied: Unable to create dataset.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        
+def dataset(dirname):        
     dirs = [d for d in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, d))]
     array = []
     for d in dirs:
@@ -84,8 +77,9 @@ def dataset(dirname):
     for img in array:
         img_path, label = img
         img = cv2.imread(img_path)
-        img = pcv.rgb2gray(img)
-        cv2.imwrite(img_path, img)
+        # img = pcv.rgb2gray(img)
+        # cv2.imwrite(img_path, img)
+        img = cv2.resize(img, (64, 64), interpolation=cv2.INTER_AREA)
         list_img.append((img, label))
         # print(f"Transformed {img_path}")
     
@@ -108,14 +102,15 @@ def dataset(dirname):
     #         array.append((os.path.join(dirname, d, img), d))
             
     X_training, X_test, Y_train, Y_test = train_test_split(images, labels_encoder, train_size=0.85, random_state=42)
-    # X_train, X_validation = train_test_split(X_training, test_size=0.15, random_state=42)
+    Y_train = to_categorical(Y_train, num_classes=4)
+    Y_test = to_categorical(Y_test, num_classes=4)
     
     # Define model
     learning_rate_decay = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2)
     early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=8, restore_best_weights=True)
 
     model = keras.models.Sequential([
-        keras.Input(shape=(256,256, 1)),
+        keras.Input(shape=(64,64, 3)),
 
         keras.layers.Conv2D(filters=32, kernel_size=(3,3), padding="same", activation="relu"),
         keras.layers.MaxPooling2D(2,2),
@@ -137,8 +132,12 @@ def dataset(dirname):
 
     # Train model
     model.fit(x=X_training, y=Y_train, epochs=50, callbacks=[learning_rate_decay, early_stopping], validation_split=0.15)
+
+    # Save model
+    model.save("model.h5")
     
     # Evaluate model
+    model.evaluate(x=X_test, y=Y_test)
 
 
 # def encoder():
