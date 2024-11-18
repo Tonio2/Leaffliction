@@ -9,3 +9,6 @@ augmented_directory/
 
 output*
 image*.JPG
+
+*.keras
+conf_matrix.png
