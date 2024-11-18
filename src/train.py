@@ -118,7 +118,7 @@ def train_model(model, X_train, Y_train):
         epochs = 50,
         callbacks = callbacks,
         validation_split = 0.15)
-    
+
     print(c_green, "Training complete.", c_reset)
     return model
 
@@ -148,14 +148,17 @@ def evaluate_model(model, X_test, Y_test, class_labels):
     # ROC Curve and AUC
     print(c_blue, "Generating ROC Curve...", c_reset)
     plt.figure()
-    fpr, tpr, _ = roc_curve(Y_test, Y_pred_prob)
-    plt.plot(fpr, tpr)
+    for i, label in enumerate(class_labels):
+        fpr, tpr, _ = roc_curve(Y_test[:, i], Y_pred_prob[:, i])
+        auc = roc_auc_score(Y_test[:, i], Y_pred_prob[:, i])
+        plt.plot(fpr, tpr, label=f"{label} (AUC: {auc:.2f})")
 
     plt.title("ROC Curve")
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
     plt.legend(loc="lower right")
     plt.savefig("ROC_curve.png")
     plt.show()
-    print(c_yellow, f"AUC f{roc_auc_score(Y_test, Y_pred_prob, average=None):.3f}" )
 
 
 def main_pipeline(dataset_path):
