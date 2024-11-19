@@ -2,9 +2,7 @@ import os
 import sys
 import cv2
 import keras
-import tensorflow
 import numpy as np
-# import seaborn as sns
 import matplotlib.pyplot as plt
 from Augmentation import is_dir
 from plantcv import plantcv as pcv
@@ -14,6 +12,7 @@ from sklearn.model_selection import train_test_split
 from transfo2 import gaussian_blur, mask_objects, remove_black
 from sklearn.metrics import roc_auc_score ,roc_curve, confusion_matrix, ConfusionMatrixDisplay, classification_report
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'    # Masque les logs d'information et les warnings.
 
 c_red = '\033[91m'
 c_green = '\033[92m'
