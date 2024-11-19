@@ -5,6 +5,7 @@ import keras
 import tensorflow
 import numpy as np
 import matplotlib.pyplot as plt
+from Augmentation import is_dir
 from plantcv import plantcv as pcv
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.utils import to_categorical
@@ -69,9 +70,6 @@ def load_dataset(dirname, img_size = 64):
     label_encoder = LabelEncoder()
     encoded_labels = label_encoder.fit_transform(labels)
 
-    for i in range(0, len(labels), 250):
-        print(f"Original: {labels[i]}, Encoded: {encoded_labels[i]}")
-
     print(c_green, "Dataset loaded successfully.", c_reset)
     return images, encoded_labels, label_encoder
 
@@ -123,9 +121,16 @@ def train_model(model, X_train, Y_train):
     return model
 
 
+def extract_fruit(labels):
+    """ Extract fruit name """
+    fruit = list(set(d.split("_")[0] for d in labels)) 
+    return fruit[0]
+
+
 def evaluate_model(model, X_test, Y_test, class_labels):
     """ Evaluate the model and display metrics """
     print(c_blue, "Evaluating model...", c_reset)
+    fruit = extract_fruit(class_labels)
 
     test_loss, test_accuracy = model.evaluate(X_test, Y_test)
     print(c_green, f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}", c_reset)
@@ -139,7 +144,7 @@ def evaluate_model(model, X_test, Y_test, class_labels):
     cm = confusion_matrix(Y_test_classes, Y_pred)
     ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_labels).plot(cmap="Blues")
     plt.title("Confusion Matrix")
-    plt.savefig("conf_matrix.png")
+    plt.savefig("results/" + fruit + "_conf_matrix.png")
     plt.show()
 
     # Classification Report
@@ -157,21 +162,21 @@ def evaluate_model(model, X_test, Y_test, class_labels):
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
     plt.legend(loc="lower right")
-    plt.savefig("ROC_curve.png")
+    plt.savefig("results/" + fruit + "_ROC_curve.png")
     plt.show()
 
-# BROUILLON
-def is_dir(dirname, d):
-        return os.path.isdir(os.path.join(dirname, d))
 
 def main_pipeline(dataset_path):
     """ Full pipeline: data loading, preprocessing, model training, and evaluation """
+    dirnames = [d for d in os.listdir(dataset_path) if is_dir(dataset_path, d)]
+    name = "results/" + extract_fruit(dirnames) + ".keras"
+
     # load & process the dataset
     images, labels, label_encoder = load_dataset(dataset_path, img_size=64)
     class_labels = label_encoder.classes_
 
     # split the dataset
-    print("Splitting dataset...")
+    print(c_blue, "Splitting dataset...", c_reset)
     X_train, X_test, Y_train, Y_test = train_test_split(images, labels, train_size=0.85, random_state=42)
     Y_train = to_categorical(Y_train, num_classes=len(class_labels))
     Y_test = to_categorical(Y_test, num_classes=len(class_labels))
@@ -182,20 +187,13 @@ def main_pipeline(dataset_path):
     model = build_model(input_shape=X_train.shape[1:], num_classes=len(class_labels) )
     model = train_model(model, X_train, Y_train)
 
-
-    # BROUILLON : get le nom de du fruit 
-
-    # dirnames = [d for d in os.listdir(root_dir) if is_dir(root_dir, d)]
-    # fruit = dirname.split("_")[0]
-
     # Save the model
-    fruit = "Apple"
-    name = fruit + ".keras"
     model.save(name)
     print(c_green, "Model saved.", c_reset)
 
     # Evaluate the model
     evaluate_model(model, X_test, Y_test, class_labels)
+
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
