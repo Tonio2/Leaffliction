@@ -30,39 +30,40 @@ def render(img1, img2, state):
     plt.tight_layout()
     plt.show()
 
-# def predict(img, fruit):
+def predict(img, fruit):
 
-#     name = fruit + ".model"
-#     reconstructed_model = keras.models.load_model(name)
-#     # Y_pred_prob = reconstructed_model.predict(X_test)
-#     # Y_pred = np.argmax(Y_pred_prob, axis=1)
-#     # Y_test_classes = np.argmax(Y_test, axis=1)
+    name = "/results/ + "fruit + ".model"
+	if os.path.isfile(name) == False:
+        print("Error: No model matching the fruit input")
+        exit(1)
+    reconstructed_model = keras.models.load_model(name)
+    # Y_pred_prob = reconstructed_model.predict(X_test)
+    # Y_pred = np.argmax(Y_pred_prob, axis=1)
+    # Y_test_classes = np.argmax(Y_test, axis=1)
 
-#     np.testing.assert_allclose(model.predict(img), reconstructed_model.predict(img))
-#     return 
+    np.testing.assert_allclose(model.predict(img), reconstructed_model.predict(img))
+    return 
 
 def main(src):
     # check if is file
     if os.path.isfile(src) == False:
         print("Not a file")
         exit(1)
-    print("ALL GOOD WITH THE IMAGE")
 
     try:
         img1 = cv2.imread(src)
         if img1 is None:
             raise FileNotFoundError(f"Image not found or cannot be read.")
-        print("IN TRY: ALL GOOD WITH THE IMAGE")
 
         # should apply tranfo 
-        img2 = preprocess_img(src, img_size=256)
+        # img2 = preprocess_img(src, img_size=256)
         # send to train to get the result
         state = "Healthy"
         # fruit = get_fruit()
         fruit = "Apple"
         # predict(img1, fruit)
 
-        render(img1, img2, state)
+        render(img1, img1, state)
 
     except Exception as e:
         print(f"Error: {e}")
