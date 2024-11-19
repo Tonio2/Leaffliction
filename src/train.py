@@ -11,7 +11,7 @@ from plantcv import plantcv as pcv
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
-from transfo2 import gaussian_blur, mask_objects, remove_black
+from Transformation import bayes, mask_objects
 from sklearn.metrics import roc_auc_score ,roc_curve, confusion_matrix, ConfusionMatrixDisplay, classification_report
 
 
@@ -32,9 +32,8 @@ def preprocess_img(image_path, img_size=64):
     img = cv2.imread(image_path)
 
     # Apply custom transformations
-    mask = gaussian_blur(img)
+    mask = bayes(img)
     img = mask_objects(img, mask)
-    img = remove_black(img)
 
     # Resize the image
     img = cv2.resize(img, (img_size, img_size), interpolation=cv2.INTER_AREA)
@@ -179,6 +178,12 @@ def main_pipeline(dataset_path):
     # load & process the dataset
     images, labels, label_encoder = load_dataset(dataset_path, img_size=64)
     class_labels = label_encoder.classes_
+
+    label_file_path = "results/" + extract_fruit(class_labels) + "_labels.txt"
+    with open(label_file_path, "w") as f:
+        for label in class_labels:
+            f.write(label + "\n")
+    print(c_green, f"Class labels saved to {label_file_path}.", c_reset)
 
     # split the dataset
     print(c_blue, "Splitting dataset...", c_reset)
