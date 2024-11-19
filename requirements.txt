@@ -61,6 +61,6 @@ vl-convert-python==1.7.0
 xarray==2024.10.0
 zict==3.0.0
 zipp==3.21.0
-tensorflow==2.18.0
+tensorflow-cpu==2.18.0
 keras
 scikit-learn

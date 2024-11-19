@@ -3,6 +3,7 @@ import sys
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import tensorflow
 import keras
 from keras import ops
@@ -26,18 +27,23 @@ def render(img1, img2, state):
 
 
 def predict(img, fruit):
-    name = "/results/" + fruit + ".model"
-    if os.path.isfile(name) is False:
-        print("Error: No model matching the fruit input")
+    path = "results/" + fruit + ".keras"
+    print(path)
+    if os.path.isfile(path) is False:
+        print(f"Error: No model found for the fruit {fruit}")
         exit(1)
-    reconstructed_model = keras.models.load_model(name)
     print("Model reconstructed !")
+    reconstructed_model = keras.models.load_model(path)
+
     # # Y_pred_prob = reconstructed_model.predict(X_test)
     # # Y_pred = np.argmax(Y_pred_prob, axis=1)
     # # Y_test_classes = np.argmax(Y_test, axis=1)
 
     # np.testing.assert_allclose(model.predict(img), reconstructed_model.predict(img))
+
+    predictions = reconstructed_model.predict(img_array)
     return "Healthy"
+
 
 
 # Need to protect split
@@ -60,11 +66,12 @@ def main(src):
             raise FileNotFoundError("Image not found or cannot be read.")
 
         fruit = get_fruit(src)
-        state = predict(img1, fruit)
 
         # Apply transformation on img2
         # img2 = preprocess_img(src, img_size=256)
 
+        # should send img2
+        state = predict(img1, fruit)
         # render(img1, img1, state)
 
     except Exception as e:
