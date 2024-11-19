@@ -6,14 +6,8 @@ import matplotlib.pyplot as plt
 import tensorflow
 import keras
 from keras import ops
-from plantcv import plantcv as pcv
 from train import preprocess_img
 
-    # Hori = np.concatenate((img1, img2), axis=1)
-    # cv2.imshow('Predict', Hori) 
-    # # plt.imshow(img, cmap='gray')
-    # cv2.waitKey(0) 
-    # plt.show()
 
 def render(img1, img2, state):
     text = "Class predicted : " + state
@@ -30,13 +24,14 @@ def render(img1, img2, state):
     plt.tight_layout()
     plt.show()
 
-def predict(img, fruit):
 
-    # name = "/results/" + fruit + ".model"
-    # if os.path.isfile(name) == False:
-    #     print("Error: No model matching the fruit input")
-    #     exit(1)
-    # reconstructed_model = keras.models.load_model(name)
+def predict(img, fruit):
+    name = "/results/" + fruit + ".model"
+    if os.path.isfile(name) is False:
+        print("Error: No model matching the fruit input")
+        exit(1)
+    reconstructed_model = keras.models.load_model(name)
+    print("Model reconstructed !")
     # # Y_pred_prob = reconstructed_model.predict(X_test)
     # # Y_pred = np.argmax(Y_pred_prob, axis=1)
     # # Y_test_classes = np.argmax(Y_test, axis=1)
@@ -44,26 +39,28 @@ def predict(img, fruit):
     # np.testing.assert_allclose(model.predict(img), reconstructed_model.predict(img))
     return "Healthy"
 
-# need to protect split 
+
+# Need to protect split
 def get_fruit(src):
     directory = os.path.dirname(src)
     directory_name = os.path.basename(directory)
     fruit = directory_name.split('_')[0]
     return fruit
 
+
 def main(src):
     # check if is file
-    if os.path.isfile(src) == False:
+    if os.path.isfile(src) is False:
         print("Not a file")
         exit(1)
 
     try:
         img1 = cv2.imread(src)
         if img1 is None:
-            raise FileNotFoundError(f"Image not found or cannot be read.")
+            raise FileNotFoundError("Image not found or cannot be read.")
 
         fruit = get_fruit(src)
-        # state = predict(img1, fruit)
+        state = predict(img1, fruit)
 
         # Apply transformation on img2
         # img2 = preprocess_img(src, img_size=256)
@@ -73,6 +70,7 @@ def main(src):
     except Exception as e:
         print(f"Error: {e}")
         exit(1)
+
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
