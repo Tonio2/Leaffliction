@@ -12,5 +12,5 @@ image*.JPG
 bayes_*/
 
 # Est-ce qu'on laisserait pas les modeles ?
-*.keras 
-conf_matrix.png
+# *.keras 
+# conf_matrix.png

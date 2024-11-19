@@ -4,6 +4,7 @@ import cv2
 import keras
 import tensorflow
 import numpy as np
+# import seaborn as sns
 import matplotlib.pyplot as plt
 from Augmentation import is_dir
 from plantcv import plantcv as pcv
@@ -56,7 +57,7 @@ def load_dataset(dirname, img_size = 64):
     print(c_blue, "Transforming images...", c_reset)
 
     for img_path, label in image_paths_labels:
-        img = preprocess_img(img_path, img_size = img_size)
+        img = preprocess_img(img_path)
         processed_images.append(img)
         labels.append(label)
 
@@ -142,8 +143,11 @@ def evaluate_model(model, X_test, Y_test, class_labels):
 
     # Confusion Matrix
     cm = confusion_matrix(Y_test_classes, Y_pred)
-    ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_labels).plot(cmap="Blues")
+    ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_labels).plot() # cmap="Blues"
     plt.title("Confusion Matrix")
+    plt.xlabel("Predicted label")
+    plt.ylabel("True label")
+    plt.tight_layout()
     plt.savefig("results/" + fruit + "_conf_matrix.png")
     plt.show()
 
@@ -162,6 +166,7 @@ def evaluate_model(model, X_test, Y_test, class_labels):
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
     plt.legend(loc="lower right")
+    plt.tight_layout()
     plt.savefig("results/" + fruit + "_ROC_curve.png")
     plt.show()
 
@@ -181,7 +186,7 @@ def main_pipeline(dataset_path):
     Y_train = to_categorical(Y_train, num_classes=len(class_labels))
     Y_test = to_categorical(Y_test, num_classes=len(class_labels))
 
-    print(c_yellow, X_train.shape, c_yellow, X_test.shape, c_blue, Y_train.shape, c_green, Y_test.shape, c_reset)
+    print(c_yellow, X_train.shape, X_test.shape, Y_train.shape, Y_test.shape, c_reset)
 
     # build & train the model
     model = build_model(input_shape=X_train.shape[1:], num_classes=len(class_labels) )
