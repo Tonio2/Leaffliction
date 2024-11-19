@@ -32,17 +32,24 @@ def render(img1, img2, state):
 
 def predict(img, fruit):
 
-    name = "/results/ + "fruit + ".model"
-	if os.path.isfile(name) == False:
-        print("Error: No model matching the fruit input")
-        exit(1)
-    reconstructed_model = keras.models.load_model(name)
-    # Y_pred_prob = reconstructed_model.predict(X_test)
-    # Y_pred = np.argmax(Y_pred_prob, axis=1)
-    # Y_test_classes = np.argmax(Y_test, axis=1)
+    # name = "/results/" + fruit + ".model"
+    # if os.path.isfile(name) == False:
+    #     print("Error: No model matching the fruit input")
+    #     exit(1)
+    # reconstructed_model = keras.models.load_model(name)
+    # # Y_pred_prob = reconstructed_model.predict(X_test)
+    # # Y_pred = np.argmax(Y_pred_prob, axis=1)
+    # # Y_test_classes = np.argmax(Y_test, axis=1)
 
-    np.testing.assert_allclose(model.predict(img), reconstructed_model.predict(img))
-    return 
+    # np.testing.assert_allclose(model.predict(img), reconstructed_model.predict(img))
+    return "Healthy"
+
+# need to protect split 
+def get_fruit(src):
+    directory = os.path.dirname(src)
+    directory_name = os.path.basename(directory)
+    fruit = directory_name.split('_')[0]
+    return fruit
 
 def main(src):
     # check if is file
@@ -55,15 +62,13 @@ def main(src):
         if img1 is None:
             raise FileNotFoundError(f"Image not found or cannot be read.")
 
-        # should apply tranfo 
-        # img2 = preprocess_img(src, img_size=256)
-        # send to train to get the result
-        state = "Healthy"
-        # fruit = get_fruit()
-        fruit = "Apple"
-        # predict(img1, fruit)
+        fruit = get_fruit(src)
+        # state = predict(img1, fruit)
 
-        render(img1, img1, state)
+        # Apply transformation on img2
+        # img2 = preprocess_img(src, img_size=256)
+
+        # render(img1, img1, state)
 
     except Exception as e:
         print(f"Error: {e}")
