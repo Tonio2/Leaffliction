@@ -165,7 +165,10 @@ def evaluate_model(model: keras.Model,
     plt.show()
 
     # Classification Report
-    print("\n" + classification_report(Y_test_classes, Y_pred, class_labels))
+    print()
+    report = classification_report(Y_test_classes, Y_pred,
+                                   target_names=class_labels)
+    print(report)
 
     # ROC Curve and AUC
     print(c_blue, "Generating ROC Curve...", cres)
@@ -182,6 +185,25 @@ def evaluate_model(model: keras.Model,
     plt.tight_layout()
     plt.savefig("results/" + fruit + "_ROC_curve.png")
     plt.show()
+
+
+def save_for_eval(
+    name: str,
+    dataset_path: str
+) -> None:
+    """ Save model and dataset in a directory for evaluation """
+    os.system("rm -rf results/eval/")
+    os.makedirs("results", exist_ok=True)
+    os.makedirs("results/eval", exist_ok=True)
+
+    # Save the model
+    model_path = os.path.join("results", "eval", os.path.basename(name))
+    os.system(f"cp {name} {model_path}")
+
+    # Save the dataset
+    dataset_dir = os.path.join("results", "eval", "dataset")
+    os.makedirs(dataset_dir, exist_ok=True)
+    os.system(f"cp -r {dataset_path.rstrip('/')}/* {dataset_dir}")
 
 
 def main_pipeline(dataset_path: str) -> None:
@@ -215,6 +237,7 @@ def main_pipeline(dataset_path: str) -> None:
 
     # Save the model
     model.save(name)
+    save_for_eval(name, dataset_path)
     print(c_green, "Model saved.", cres)
 
     # Evaluate the model
