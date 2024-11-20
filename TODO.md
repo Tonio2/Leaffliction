@@ -2,6 +2,7 @@
 
     - Encapsulate all code in try catch to handle errors like wrong filename and whatnot
     - use is file and is dir to change use of Augmentation.py
+    - adapter readme to new usage
 
 # Doc
     - updating from 3.x : https://plantcv.readthedocs.io/en/stable/updating/

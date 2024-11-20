@@ -28,14 +28,14 @@ def normalize_img(images: list[np.ndarray]) -> np.ndarray:
     return np.array(images, dtype="float32") / 255.0
 
 
-def preprocess_img(image_path: str, img_size: int = 64) -> np.ndarray:
+def preprocess_img(image_path: str, fruit: str, img_size: int = 64) -> np.ndarray:
     """ Preprocess a single image """
     img = cv2.imread(image_path)
     if img is None:
         raise ValueError(f"Unable to read image at {image_path}")
 
     # Apply custom transformations
-    mask = bayes(img)
+    mask = bayes(img, pdf_file=f"{fruit}.txt")
     img = mask_objects(img, mask)
 
     # Resize the image
@@ -43,7 +43,7 @@ def preprocess_img(image_path: str, img_size: int = 64) -> np.ndarray:
     return img
 
 
-def load_dataset(dirname: str) -> tuple[np.ndarray, np.ndarray, LabelEncoder]:
+def load_dataset(dirname: str, fruit) -> tuple[np.ndarray, np.ndarray, LabelEncoder]:
     """ Load and preprocess images from a dataset directory """
     print(c_blue, "Loading dataset...", cres)
     dirs = [d for d in os.listdir(dirname)
@@ -60,9 +60,13 @@ def load_dataset(dirname: str) -> tuple[np.ndarray, np.ndarray, LabelEncoder]:
     print(c_blue, "Transforming images...", cres)
 
     for img_path, label in image_paths_labels:
-        img = preprocess_img(img_path)
-        processed_images.append(img)
-        labels.append(label)
+        try:
+            img = preprocess_img(img_path, fruit)
+            processed_images.append(img)
+            labels.append(label)
+        except Exception as e:
+            print(c_red, f"Error processing {img_path}: {e}")
+            raise
 
     print(c_green, "Transformation complete.", cres)
 
@@ -208,14 +212,16 @@ def save_for_eval(
 
 def main_pipeline(dataset_path: str) -> None:
     """Full pipeline: data loading, preprocess, model training, evaluation"""
+    os.makedirs("results", exist_ok=True)
     dirnames = [d for d in os.listdir(dataset_path) if is_dir(dataset_path, d)]
-    name = f"results/{extract_fruit(dirnames)}.keras"
+    fruit = extract_fruit(dirnames)
+    name = f"results/{fruit}.keras"
 
     # load & process the dataset
-    images, labels, label_encoder = load_dataset(dataset_path)
+    images, labels, label_encoder = load_dataset(dataset_path, fruit)
     class_labels = label_encoder.classes_
 
-    label_file_path = f"results/{extract_fruit(class_labels)}_labels.txt"
+    label_file_path = f"results/{fruit}_labels.txt"
     with open(label_file_path, "w") as f:
         for label in class_labels:
             f.write(label + "\n")
@@ -249,5 +255,9 @@ if __name__ == '__main__':
         print("Usage: python train.py dirname")
         exit(1)
 
-    dataset_path = sys.argv[1]
-    main_pipeline(dataset_path)
+    try:
+        dataset_path = sys.argv[1]
+        main_pipeline(dataset_path)
+    except Exception as e:
+        print(c_red, f"Error: {e}", cres)
+        exit(1)

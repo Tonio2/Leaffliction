@@ -102,16 +102,16 @@ def analyze_color(img: np.ndarray, mask: np.ndarray, output: str, basename: str)
         raise
 
 
-def bayes(img: np.ndarray) -> np.ndarray:
+def bayes(img: np.ndarray, pdf_file: str = "./output.txt") -> np.ndarray:
     """ Generate a mask using Bayesian classification """
-    mask = pcv.naive_bayes_classifier(rgb_img=img, pdf_file="./output.txt")
+    mask = pcv.naive_bayes_classifier(rgb_img=img, pdf_file=pdf_file)
     plant_mask = mask['plant']
     plant_mask = pcv.fill_holes(plant_mask)
 
     return plant_mask
 
 
-def process_image(img_path: str, output_dir: str, plot: bool = False) -> None:
+def process_image(img_path: str, output_dir: str, fruit:str, plot: bool = False) -> None:
     """ Process a single image with the specified transformation """
     try:
         img, _, _ = pcv.readimage(filename=img_path)
@@ -135,7 +135,7 @@ def process_image(img_path: str, output_dir: str, plot: bool = False) -> None:
 
         analyze_color(img, mask, output_dir, basename)
 
-        mask = bayes(img)
+        mask = bayes(img, pdf_file=f"{fruit}.txt")
         result = mask_objects(img, mask)
         pcv.print_image(result, os.path.join(output_dir, f"{basename}_bayes.png"))
 
@@ -167,6 +167,7 @@ def main():
     parser = argparse.ArgumentParser(description="Image Transformation Script")
     parser.add_argument("input", help="Path to the input image or directory.")
     parser.add_argument("output", help="Directory to save results.")
+    parser.add_argument("fruit", help="Fruit to analyze.")
     args = parser.parse_args()
 
     try:
@@ -177,12 +178,12 @@ def main():
         raise
 
     if os.path.isfile(args.input):
-        process_image(args.input, args.output, plot=True)
+        process_image(args.input, args.output, args.fruit, plot=True)
     elif os.path.isdir(args.input):
         for file in os.listdir(args.input):
             if file.lower().endswith(("jpg", "jpeg", "png")):
                 process_image(os.path.join(args.input, file),
-                              args.output)
+                              args.output, args.fruit)
     else:
         print("Invalid input path. Provide an image or directory.")
 
