@@ -87,4 +87,8 @@ def process_images(input_dir: str,
 if __name__ == "__main__":
     input_directory = "images/Apple"
 
-    process_images(input_directory)
+    try:
+        process_images(input_directory)
+    except Exception as e:
+        print(f"Error processing images: {e}", file=sys.stderr)
+        sys.exit(1)

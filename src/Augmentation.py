@@ -170,10 +170,14 @@ if __name__ == '__main__':
         print(f"Path {path} does not exist.")
         sys.exit(1)
 
-    if os.path.isfile(path):
-        modifs = augmentation(path)
-        for key, value in modifs.items():
-            save_path = os.path.basename(path).split(".JPG")[0] + key
-            cv2.imwrite(save_path, value)
-    elif os.path.isdir(path):
-        main(path)
+    try:
+        if os.path.isfile(path):
+            modifs = augmentation(path)
+            for key, value in modifs.items():
+                save_path = os.path.basename(path).split(".JPG")[0] + key
+                cv2.imwrite(save_path, value)
+        elif os.path.isdir(path):
+            main(path)
+    except Exception as e:
+        print(f"Error processing image: {e}")
+        exit(1)

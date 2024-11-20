@@ -98,4 +98,8 @@ if __name__ == "__main__":
     label_file_path = sys.argv[4]
     output_path = sys.argv[5]
 
-    main(image_path, model_path, fruit, label_file_path, output_path)
+    try:
+        main(image_path, model_path, fruit, label_file_path, output_path)
+    except Exception as e:
+        print(f"Error processing image: {e}")
+        exit(1)

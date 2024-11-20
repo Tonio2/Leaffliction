@@ -28,4 +28,8 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("Usage: python Distribution.py dirname")
         exit(1)
-    main(sys.argv[1])
+    try:
+        main(sys.argv[1])
+    except Exception as e:
+        print(f"Error processing directory: {e}")
+        exit(1)
