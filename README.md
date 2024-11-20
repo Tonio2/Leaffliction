@@ -46,31 +46,22 @@ python Distribution.py <dirname>
 
 ### Part 2: Data augmentation
 
-To augment a single image:
-
+To augment a single image or a directory
 ```
-python Augmentation.py <img_path>
-```
-
-To create an augmented directory:
-
-```
-python Augmentation.py --dir <dirname>
+python Augmentation.py <img_path | dir_path>
 ```
 
 ### Part 3: Image transformation
-
+To transform a single image or a directory
 ```
-python Transformation.py <dirname>
+python Transformation.py <img_path | dir_path>
 ```
-
 ### Part 4: Classification
-
+Fruit = "Grape" or "Apple"
 ```
-python Train.py <dirname>
-python Predict.py <img_path>
+python train.py <dirname>
+python predict.py python predict.py <image_path> <model_path> <Fruit> <label_file_path> <output_path>
 ```
-
 ## Dataset
 
 The first three parts of the project emphasize the importance of our dataset choice.
