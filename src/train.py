@@ -28,7 +28,11 @@ def normalize_img(images: list[np.ndarray]) -> np.ndarray:
     return np.array(images, dtype="float32") / 255.0
 
 
-def preprocess_img(image_path: str, fruit: str, img_size: int = 64) -> np.ndarray:
+def preprocess_img(
+    image_path: str,
+    fruit: str,
+    img_size: int = 64
+) -> np.ndarray:
     """ Preprocess a single image """
     img = cv2.imread(image_path)
     if img is None:
@@ -43,7 +47,10 @@ def preprocess_img(image_path: str, fruit: str, img_size: int = 64) -> np.ndarra
     return img
 
 
-def load_dataset(dirname: str, fruit) -> tuple[np.ndarray, np.ndarray, LabelEncoder]:
+def load_dataset(
+    dirname: str,
+    fruit
+) -> tuple[np.ndarray, np.ndarray, LabelEncoder]:
     """ Load and preprocess images from a dataset directory """
     print(c_blue, "Loading dataset...", cres)
     dirs = [d for d in os.listdir(dirname)

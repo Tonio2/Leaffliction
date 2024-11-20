@@ -77,7 +77,12 @@ def create_pseudolandmarks_image(image: np.ndarray,
     return pseudolandmarks
 
 
-def analyze_color(img: np.ndarray, mask: np.ndarray, output: str, basename: str) -> None:
+def analyze_color(
+    img: np.ndarray,
+    mask: np.ndarray,
+    output: str,
+    basename: str
+) -> None:
     """ Analyze color channels and save histograms """
     try:
         pcv.analyze.color(rgb_img=img, labeled_mask=mask, colorspaces='all')
@@ -111,40 +116,51 @@ def bayes(img: np.ndarray, pdf_file: str = "./output.txt") -> np.ndarray:
     return plant_mask
 
 
-def process_image(img_path: str, output_dir: str, fruit:str, plot: bool = False) -> None:
+def process_image(
+    img_path: str,
+    output_dir: str,
+    fruit: str,
+    plot: bool = False
+) -> None:
     """ Process a single image with the specified transformation """
     try:
         img, _, _ = pcv.readimage(filename=img_path)
-        basename = os.path.basename(img_path).split(".")[0]
+        bname = os.path.basename(img_path).split(".")[0]
 
         images = [(img, "Original Image")]
         mask = gaussian_blur(img)
         images.append((mask, "Mask"))
-        
+
         result = mask_objects(img, mask)
         images.append((result, "Masked Image"))
-        
+
         result = roi(img, mask)
         images.append((result, "ROI Image"))
-        
+
         result = analyze_object(img, mask)
         images.append((result, "Analysis"))
-        
+
         result = create_pseudolandmarks_image(img, mask)
         images.append((result, "Pseudolandmarks"))
 
-        analyze_color(img, mask, output_dir, basename)
+        analyze_color(img, mask, output_dir, bname)
 
         mask = bayes(img, pdf_file=f"{fruit}.txt")
         result = mask_objects(img, mask)
-        pcv.print_image(result, os.path.join(output_dir, f"{basename}_bayes.png"))
+        pcv.print_image(result, os.path.join(output_dir,
+                                             f"{bname}_bayes.png"))
 
         if not plot:
-            pcv.print_image(mask, os.path.join(output_dir, f"{basename}_mask.png"))
-            pcv.print_image(images[2][0], os.path.join(output_dir, f"{basename}_masked.png"))
-            pcv.print_image(images[3][0], os.path.join(output_dir, f"{basename}_roi.png"))
-            pcv.print_image(images[4][0], os.path.join(output_dir, f"{basename}_analysis.png"))
-            pcv.print_image(images[5][0], os.path.join(output_dir, f"{basename}_landmarks.png"))
+            pcv.print_image(mask, os.path.join(output_dir,
+                                               f"{bname}_mask.png"))
+            pcv.print_image(images[2][0],
+                            os.path.join(output_dir, f"{bname}_masked.png"))
+            pcv.print_image(images[3][0],
+                            os.path.join(output_dir, f"{bname}_roi.png"))
+            pcv.print_image(images[4][0],
+                            os.path.join(output_dir, f"{bname}_analysis.png"))
+            pcv.print_image(images[5][0],
+                            os.path.join(output_dir, f"{bname}_landmarks.png"))
         else:
             plt.figure(figsize=(15, 10))
             for i, (image, title) in enumerate(images, 1):
@@ -154,12 +170,10 @@ def process_image(img_path: str, output_dir: str, fruit:str, plot: bool = False)
                 plt.axis('off')
             plt.tight_layout()
             plt.show()
-            plt.savefig(os.path.join(output_dir, f"{basename}_results.png"))
+            plt.savefig(os.path.join(output_dir, f"{bname}_results.png"))
     except Exception as e:
         print(f"Error processing image: {e}")
         raise
-        # Plot all images
-        
 
 
 # CLI setup
