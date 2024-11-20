@@ -19,7 +19,8 @@ def load_class_labels(label_file_path: str) -> list[str]:
 
 def render(src, predicted_label, output_path):
     """ Render the the disease of a single image """
-    text = "===    DL classification    ===\nClass predicted : " + predicted_label
+    text = "===    DL classification    ===\nClass predicted : " \
+        + predicted_label
     original_img = cv2.imread(src)
     if original_img is None:
         raise FileNotFoundError("Image not found or cannot be read.")
@@ -35,14 +36,15 @@ def render(src, predicted_label, output_path):
 
     plt.imshow(final_img)
     plt.axis('off')
-    plt.figtext(0.5, 0.01, text, ha='center', fontsize=12, color='white', weight='bold')
+    plt.figtext(0.5, 0.01, text, ha='center',
+                fontsize=12, color='white', weight='bold')
     plt.tight_layout()
     plt.savefig(output_path)
     plt.show()
 
 
 def predict(img_src, model_path, label_file):
-    """ Predict the disease of a single image and render the corresponding class label """
+    """ Predict the disease of a single image and render matching label """
     # Load the trained model
     model = tf.keras.models.load_model(model_path)
     class_labels = load_class_labels(label_file_path)
@@ -62,9 +64,9 @@ def predict(img_src, model_path, label_file):
 
 
 def main(img_src: str,
-                  model_path: str,
-                  label_file_path: str,
-                  output_path: str) -> None:
+         model_path: str,
+         label_file_path: str,
+         output_path: str) -> None:
     """ Predict the disease of a single image and render the output """
     if os.path.isfile(img_src) is False:
         print("Error: {img_src} is not a file")
