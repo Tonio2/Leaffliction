@@ -35,8 +35,8 @@ def preprocess_img(image_path: str, img_size: int = 64) -> np.ndarray:
         raise ValueError(f"Unable to read image at {image_path}")
 
     # Apply custom transformations
-    mask = bayes(img)
-    img = mask_objects(img, mask)
+    # mask = bayes(img)
+    # img = mask_objects(img, mask)
 
     # Resize the image
     img = cv2.resize(img, (img_size, img_size), interpolation=cv2.INTER_AREA)
