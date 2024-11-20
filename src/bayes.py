@@ -4,25 +4,30 @@ import shutil
 from plantcv import learn
 from plantcv import plantcv as pcv
 
-def clean_directory(path):
-        """Removes a directory if it exists."""
-        if os.path.exists(path):
-            print(f"Removing directory: {path}")
-            try:
-                os.system(f"rm -rf {path}")
-            except Exception as e:
-                print(f"Error removing directory {path}: {e}", file=sys.stderr)
-                sys.exit(1)
 
-def process_images(input_dir, output_images_dir="bayes_images", output_masks_dir="bayes_masks", output_file="output.txt"):
+def clean_directory(path: str) -> None:
+    """Removes a directory if it exists."""
+    if os.path.exists(path):
+        print(f"Removing directory: {path}")
+        try:
+            os.system(f"rm -rf {path}")
+        except Exception as e:
+            print(f"Error removing directory {path}: {e}", file=sys.stderr)
+            sys.exit(1)
+
+
+def process_images(input_dir: str,
+                   output_images_dir: str = "bayes_images",
+                   output_masks_dir: str = "bayes_masks",
+                   output_file: str = "output.txt") -> None:
     """
-    Processes images by copying them to a specified directory and creating masks.
+    Processes images by copying them to a specified directory + creating masks.
 
     Args:
         input_dir (str): Directory containing input images.
-        output_images_dir (str): Directory where processed images will be copied.
+        output_images_dir (str): Directory where processed img will be copied.
         output_masks_dir (str): Directory where masks will be saved.
-        output_file (str): Path to the output file for the Naive Bayes classifier.
+        output_file (str): Path to the output file for the Naive Bayes clf.
     """
     # Clean and recreate output directories
     clean_directory(output_images_dir)
@@ -33,7 +38,8 @@ def process_images(input_dir, output_images_dir="bayes_images", output_masks_dir
     try:
         subdirs = os.listdir(input_dir)
     except FileNotFoundError:
-        print(f"Error: The directory '{input_dir}' does not exist.", file=sys.stderr)
+        print(f"Error: The directory '{input_dir}' does not exist.",
+              file=sys.stderr)
         sys.exit(1)
 
     for subdir in subdirs:
@@ -51,18 +57,22 @@ def process_images(input_dir, output_images_dir="bayes_images", output_masks_dir
             try:
                 shutil.copy(imgpath, new_imgpath)
             except Exception as e:
-                print(f"Error copying {imgpath} to {new_imgpath}: {e}", file=sys.stderr)
+                print(f"Error copying {imgpath} to {new_imgpath}: {e}",
+                      file=sys.stderr)
                 continue
 
             # Process mask
             try:
                 image, _, _ = pcv.readimage(filename=imgpath)
                 b_channel = pcv.rgb2gray_lab(rgb_img=image, channel='b')
-                bin_mask = pcv.threshold.otsu(gray_img=b_channel, object_type='light')
+                bin_mask = pcv.threshold.otsu(b_channel, object_type='light')
                 clean_mask = pcv.fill_holes(bin_mask)
-                pcv.print_image(clean_mask, os.path.join(output_masks_dir, f"{subdir}_{img}"))
+                pcv.print_image(clean_mask,
+                                os.path.join(output_masks_dir,
+                                             f"{subdir}_{img}"))
             except Exception as e:
-                print(f"Error processing mask for {imgpath}: {e}", file=sys.stderr)
+                print(f"Error processing mask for {imgpath}: {e}",
+                      file=sys.stderr)
                 continue
 
     # Run Naive Bayes classifier
@@ -72,6 +82,7 @@ def process_images(input_dir, output_images_dir="bayes_images", output_masks_dir
     except Exception as e:
         print(f"Error running Naive Bayes classifier: {e}", file=sys.stderr)
         sys.exit(1)
+
 
 if __name__ == "__main__":
     input_directory = "images/Apple"

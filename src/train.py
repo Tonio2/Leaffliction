@@ -2,34 +2,37 @@ import os
 import sys
 import cv2
 import keras
-import tensorflow
 import numpy as np
-# import seaborn as sns
 import matplotlib.pyplot as plt
 from Augmentation import is_dir
-from plantcv import plantcv as pcv
 from sklearn.preprocessing import LabelEncoder
+from Transformation import bayes, mask_objects
 from tensorflow.keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
-from Transformation import bayes, mask_objects
-from sklearn.metrics import roc_auc_score ,roc_curve, confusion_matrix, ConfusionMatrixDisplay, classification_report
+from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
+from sklearn.metrics import ConfusionMatrixDisplay, classification_report
 
+
+# Masque les logs d'information et les warnings.
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 c_red = '\033[91m'
 c_green = '\033[92m'
 c_blue = '\033[94m'
-c_yellow = '\033[93m'
-c_reset = '\033[0m'
+cyel = '\033[93m'
+cres = '\033[0m'
 
 
-def normalize_img(images):
+def normalize_img(images: list[np.ndarray]) -> np.ndarray:
     """ Normalize image pixel values to the range [0, 1] """
     return np.array(images, dtype="float32") / 255.0
 
 
-def preprocess_img(image_path, img_size=64):
+def preprocess_img(image_path: str, img_size: int = 64) -> np.ndarray:
     """ Preprocess a single image """
     img = cv2.imread(image_path)
+    if img is None:
+        raise ValueError(f"Unable to read image at {image_path}")
 
     # Apply custom transformations
     mask = bayes(img)
@@ -40,10 +43,11 @@ def preprocess_img(image_path, img_size=64):
     return img
 
 
-def load_dataset(dirname, img_size = 64):
+def load_dataset(dirname: str) -> tuple[np.ndarray, np.ndarray, LabelEncoder]:
     """ Load and preprocess images from a dataset directory """
-    print(c_blue, "Loading dataset...", c_reset)
-    dirs = [d for d in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, d))]
+    print(c_blue, "Loading dataset...", cres)
+    dirs = [d for d in os.listdir(dirname)
+            if os.path.isdir(os.path.join(dirname, d))]
     image_paths_labels = []
     for d in dirs:
         for img in os.listdir(os.path.join(dirname, d)):
@@ -53,87 +57,97 @@ def load_dataset(dirname, img_size = 64):
     labels = []
 
     # Transformation
-    print(c_blue, "Transforming images...", c_reset)
+    print(c_blue, "Transforming images...", cres)
 
     for img_path, label in image_paths_labels:
         img = preprocess_img(img_path)
         processed_images.append(img)
         labels.append(label)
 
-    print(c_green, "Transformation complete.", c_reset)
+    print(c_green, "Transformation complete.", cres)
 
     # Normalize
     images = normalize_img(processed_images)
-    print(c_yellow, images.shape, c_reset)
+    print(cyel, images.shape, cres)
 
     # Labelize
     label_encoder = LabelEncoder()
     encoded_labels = label_encoder.fit_transform(labels)
 
-    print(c_green, "Dataset loaded successfully.", c_reset)
+    print(c_green, "Dataset loaded successfully.", cres)
     return images, encoded_labels, label_encoder
 
 
-def build_model(input_shape, num_classes):
+def build_model(input_shape: tuple[int, int, int], nb_cls: int) -> keras.Model:
     """ Build and compile a CNN model for image classification """
     model = keras.models.Sequential([
         keras.Input(shape=input_shape),
 
-        keras.layers.Conv2D(filters=32, kernel_size=(3,3), padding="same", activation="relu"),
-        keras.layers.MaxPooling2D(2,2),
+        keras.layers.Conv2D(32, (3, 3), padding="same", activation="relu"),
+        keras.layers.MaxPooling2D(2, 2),
         keras.layers.Dropout(0.3),
 
-        keras.layers.Conv2D(filters=64, kernel_size=(3,3), padding="same", activation="relu"),
-        keras.layers.MaxPooling2D(2,2),
+        keras.layers.Conv2D(64, (3, 3), padding="same", activation="relu"),
+        keras.layers.MaxPooling2D(2, 2),
         keras.layers.Dropout(0.3),
 
         keras.layers.Flatten(),
         keras.layers.Dense(128, activation="relu"),
         keras.layers.Dropout(0.5),
 
-        keras.layers.Dense(num_classes, activation="softmax")
+        keras.layers.Dense(nb_cls, activation="softmax")
     ])
 
     model.compile(
-        optimizer = keras.optimizers.Adam(learning_rate=0.001),
+        optimizer=keras.optimizers.Adam(learning_rate=0.001),
         loss="categorical_crossentropy",
         metrics=["accuracy"]
     )
     return model
 
 
-def train_model(model, X_train, Y_train):
+def train_model(model: keras.Model,
+                X_train: np.ndarray,
+                Y_train: np.ndarray) -> keras.Model:
     """ Train the CNN model """
-    print(c_blue, "Starting training...", c_reset)
+    print(c_blue, "Starting training...", cres)
 
     callbacks = [
-        keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2),
-        keras.callbacks.EarlyStopping(monitor='val_loss', patience=8, restore_best_weights=True)
+        keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
+                                          factor=0.1,
+                                          patience=2),
+        keras.callbacks.EarlyStopping(monitor='val_loss',
+                                      patience=8,
+                                      restore_best_weights=True)
     ]
 
     model.fit(
         x=X_train, y=Y_train,
-        epochs = 50,
-        callbacks = callbacks,
-        validation_split = 0.15)
+        epochs=50,
+        callbacks=callbacks,
+        validation_split=0.15)
 
-    print(c_green, "Training complete.", c_reset)
+    print(c_green, "Training complete.", cres)
     return model
 
 
-def extract_fruit(labels):
+def extract_fruit(labels: list[str]) -> str:
     """ Extract fruit name """
-    fruit = list(set(d.split("_")[0] for d in labels)) 
+    fruit = list(set(d.split("_")[0] for d in labels))
     return fruit[0]
 
 
-def evaluate_model(model, X_test, Y_test, class_labels):
+def evaluate_model(model: keras.Model,
+                   X_test: np.ndarray,
+                   Y_test: np.ndarray,
+                   class_labels: list[str]) -> None:
     """ Evaluate the model and display metrics """
-    print(c_blue, "Evaluating model...", c_reset)
+    print(c_blue, "Evaluating model...", cres)
     fruit = extract_fruit(class_labels)
 
     test_loss, test_accuracy = model.evaluate(X_test, Y_test)
-    print(c_green, f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}", c_reset)
+    print(c_green, f"Test Loss: {test_loss:.4f}, \
+                    Test Accuracy: {test_accuracy:.4f}", cres)
 
     # Predictions
     Y_pred_prob = model.predict(X_test)
@@ -142,7 +156,7 @@ def evaluate_model(model, X_test, Y_test, class_labels):
 
     # Confusion Matrix
     cm = confusion_matrix(Y_test_classes, Y_pred)
-    ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_labels).plot() # cmap="Blues"
+    ConfusionMatrixDisplay(cm, display_labels=class_labels).plot()
     plt.title("Confusion Matrix")
     plt.xlabel("Predicted label")
     plt.ylabel("True label")
@@ -151,10 +165,10 @@ def evaluate_model(model, X_test, Y_test, class_labels):
     plt.show()
 
     # Classification Report
-    print("\n" + classification_report(Y_test_classes, Y_pred, target_names=class_labels))
+    print("\n" + classification_report(Y_test_classes, Y_pred, class_labels))
 
     # ROC Curve and AUC
-    print(c_blue, "Generating ROC Curve...", c_reset)
+    print(c_blue, "Generating ROC Curve...", cres)
     plt.figure()
     for i, label in enumerate(class_labels):
         fpr, tpr, _ = roc_curve(Y_test[:, i], Y_pred_prob[:, i])
@@ -170,36 +184,38 @@ def evaluate_model(model, X_test, Y_test, class_labels):
     plt.show()
 
 
-def main_pipeline(dataset_path):
-    """ Full pipeline: data loading, preprocessing, model training, and evaluation """
+def main_pipeline(dataset_path: str) -> None:
+    """Full pipeline: data loading, preprocess, model training, evaluation"""
     dirnames = [d for d in os.listdir(dataset_path) if is_dir(dataset_path, d)]
-    name = "results/" + extract_fruit(dirnames) + ".keras"
+    name = f"results/{extract_fruit(dirnames)}.keras"
 
     # load & process the dataset
-    images, labels, label_encoder = load_dataset(dataset_path, img_size=64)
+    images, labels, label_encoder = load_dataset(dataset_path)
     class_labels = label_encoder.classes_
 
-    label_file_path = "results/" + extract_fruit(class_labels) + "_labels.txt"
+    label_file_path = f"results/{extract_fruit(class_labels)}_labels.txt"
     with open(label_file_path, "w") as f:
         for label in class_labels:
             f.write(label + "\n")
-    print(c_green, f"Class labels saved to {label_file_path}.", c_reset)
+    print(c_green, f"Class labels saved to {label_file_path}.", cres)
 
     # split the dataset
-    print(c_blue, "Splitting dataset...", c_reset)
-    X_train, X_test, Y_train, Y_test = train_test_split(images, labels, train_size=0.85, random_state=42)
+    print(c_blue, "Splitting dataset...", cres)
+    X_train, X_test, Y_train, Y_test = train_test_split(images, labels,
+                                                        train_size=0.85,
+                                                        random_state=42)
     Y_train = to_categorical(Y_train, num_classes=len(class_labels))
     Y_test = to_categorical(Y_test, num_classes=len(class_labels))
 
-    print(c_yellow, X_train.shape, X_test.shape, Y_train.shape, Y_test.shape, c_reset)
+    print(cyel, X_train.shape, X_test.shape, Y_train.shape, Y_test.shape, cres)
 
     # build & train the model
-    model = build_model(input_shape=X_train.shape[1:], num_classes=len(class_labels) )
+    model = build_model(X_train.shape[1:], len(class_labels))
     model = train_model(model, X_train, Y_train)
 
     # Save the model
     model.save(name)
-    print(c_green, "Model saved.", c_reset)
+    print(c_green, "Model saved.", cres)
 
     # Evaluate the model
     evaluate_model(model, X_test, Y_test, class_labels)

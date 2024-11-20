@@ -2,11 +2,10 @@ import os
 import sys
 import cv2
 
-def is_dir(dirname, d):
-    return os.path.isdir(os.path.join(dirname, d))
 
 def main(dirname):
-    original_width, original_height = 0, 0
+    """ """
+    original_wdt, original_hght = 0, 0
     for d in os.listdir(dirname):
         if not os.path.isdir(os.path.join(dirname, d)):
             continue
@@ -15,11 +14,11 @@ def main(dirname):
             img_path = os.path.join(dirname, d, img)
             image = cv2.imread(img_path)
             height, width, _ = image.shape
-            if original_width == 0 and original_height == 0:
-                original_width, original_height = width, height
-            if width != original_width or height != original_height:
-                print(f"Image {img} in directory {d} has different dimensions.")
-                print(f"Original dimensions: {original_width}x{original_height}")
+            if original_wdt == 0 and original_hght == 0:
+                original_wdt, original_hght = width, height
+            if width != original_wdt or height != original_hght:
+                print(f"Image {img} in directory {d} has different dimensions")
+                print(f"Original dimensions: {original_wdt}x{original_hght}")
                 print(f"Current dimensions: {width}x{height}")
                 print("Exiting...")
                 exit(1)

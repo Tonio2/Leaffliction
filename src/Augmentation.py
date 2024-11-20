@@ -1,33 +1,40 @@
-import cv2
-import numpy as np
-import sys
 import os
+import cv2
+import sys
+import numpy as np
+from Distribution import is_dir
 
 
-def rotate(src):
+def rotate(src: np.ndarray) -> np.ndarray:
+    """ Rotates an image by 45 degrees clockwise """
     (h, w) = src.shape[:2]
     center = (w // 2, h // 2)
     rotation_matrix = cv2.getRotationMatrix2D(center, 45, 1.0)
     return cv2.warpAffine(src, rotation_matrix, (w, h))
 
 
-def blur(src):
+def blur(src: np.ndarray) -> np.ndarray:
+    """ Applies a Gaussian blur """
     return cv2.GaussianBlur(src, (9, 9), 1)
 
 
-def contrast(src):
+def contrast(src: np.ndarray) -> np.ndarray:
+    """ Increases the contrast of the image """
     return cv2.convertScaleAbs(src, alpha=1.5, beta=10)
 
 
-def flip(src):
+def flip(src: np.ndarray) -> np.ndarray:
+    """ Flips the image horizontally (mirrors the image) """
     return cv2.flip(src, 1)
 
 
-def illumination(src):
+def illumination(src: np.ndarray) -> np.ndarray:
+    """ Increases the image illumination """
     return cv2.convertScaleAbs(src, alpha=1, beta=50)
 
 
-def projective_transformation(src):
+def projective_transformation(src: np.ndarray) -> np.ndarray:
+    """ Applies a projective transformation to the image """
     (h, w) = src.shape[:2]
     src_points = np.float32([
         [0, 0],           # Top-left corner
@@ -49,22 +56,27 @@ def projective_transformation(src):
     return cv2.warpPerspective(src, matrix, output_size)
 
 
-def scale(src):
+def scale(src: np.ndarray) -> np.ndarray:
+    """ Scales the image while maintaining the aspect ratio """
     scale_factor = 1.2
     height, width = src.shape[:2]
-    scaled_image = cv2.resize(src, None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_LINEAR)
-    start_x = (scaled_image.shape[1] - width) // 2
-    start_y = (scaled_image.shape[0] - height) // 2
-    cropped_image = scaled_image[start_y:start_y + height, start_x:start_x + width]
-    return cropped_image
+    scaled_img = cv2.resize(src, None,
+                            fx=scale_factor, fy=scale_factor,
+                            interpolation=cv2.INTER_LINEAR)
+    start_x = (scaled_img.shape[1] - width) // 2
+    start_y = (scaled_img.shape[0] - height) // 2
+    cropped_img = scaled_img[start_y:start_y + height, start_x:start_x + width]
+    return cropped_img
 
 
 # Careful: You should not resize images because the encoder needs a fixed size.
-def zoom(src):
+def zoom(src: np.ndarray) -> np.ndarray:
+    """ Zooms the image """
     return cv2.resize(src, None, fx=5, fy=5, interpolation=cv2.INTER_NEAREST)
 
 
-def hue_adjustment(src):
+def hue_adjustment(src: np.ndarray) -> np.ndarray:
+    """ Adjusts the hue of the input image """
     return cv2.cvtColor(src, cv2. COLOR_BGR2HSV)
 
 
@@ -84,7 +96,8 @@ ft_map = {
 params = ["Rotate", "Blur", "Contrast", "Flip", "Projective", "Scale"]
 
 
-def augmentation(src):
+def augmentation(src: str) -> dict:
+    """ Applies augmentations to the input image """
     modification = {}
     img = cv2.imread(src)
     if img is None:
@@ -99,29 +112,27 @@ def augmentation(src):
     return modification
 
 
-def is_dir(dirname, d):
-    return os.path.isdir(os.path.join(dirname, d))
-
-
-def setup(dir_path, output_dir = "$HOME/goinfre"):
+def setup(dir_path: str, output_dir: str = "$HOME/goinfre") -> str:
+    """ Sets up the output directory for augmented images """
     output_dir = os.path.expandvars(output_dir)
     new_dir = os.path.join(output_dir, "augmented_directory")
 
     print("rm -rf " + new_dir)
     os.system("rm -rf " + new_dir)
-    
+
     print("cp -r " + dir_path + " " + new_dir)
     os.system("cp -r " + dir_path + " " + new_dir)
     return new_dir
 
 
-def main(dirname):
+def main(dirname: str):
+    """ Augments images in the specified directory """
     new_dir = setup(dirname, "./")
 
     dirs = [d for d in os.listdir(new_dir) if is_dir(new_dir, d)]
     dir_size = [len(os.listdir(os.path.join(new_dir, d))) for d in dirs]
     max_dir_size = 7 * (min(dir_size))
-    
+
     print(f"Found {len(dirs)} directories:")
     for d, s in zip(dirs, dir_size):
         print(f"Directory {d} has {s} images.")
@@ -133,7 +144,7 @@ def main(dirname):
         img_dir = os.path.join(new_dir, d)
         img_list = os.listdir(img_dir)
         dir_size = len(img_list)
-        
+
         while dir_size + 6 * idx <= max_dir_size and idx < dir_size:
             img = os.path.join(img_dir, img_list[idx])
             modifs = augmentation(img)

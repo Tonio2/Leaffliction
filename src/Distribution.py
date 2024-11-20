@@ -1,10 +1,11 @@
 import os
 import sys
-import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.pyplot as plt
 
 
-def render(fruit_type, label, size):
+def render(fruit_type: str, label: list[str], size: list[int]) -> None:
+    """ Renders a pie chart and bar chart """
     fig, (ax1, ax2) = plt.subplots(1, 2)
     fig.suptitle(fruit_type + " class distribution")
     palette = sns.color_palette("Set2")
@@ -19,11 +20,16 @@ def render(fruit_type, label, size):
     plt.show()
 
 
-def is_dir(dirname, d):
+def is_dir(dirname: str, d: str) -> bool:
+    """ Checks if the given path is a directory """
     return os.path.isdir(os.path.join(dirname, d))
 
 
-def main(root_dir):
+def main(root_dir: str) -> None:
+    """
+    Analyzes a root directory containing subdirectories for each fruit type,
+    extracts class labels and sizes, and renders visualizations.
+    """
     fruit_dictionary = {}
     dirnames = [d for d in os.listdir(root_dir) if is_dir(root_dir, d)]
     for dirname in sorted(dirnames):
