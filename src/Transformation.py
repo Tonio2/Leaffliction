@@ -77,7 +77,7 @@ def create_pseudolandmarks_image(image: np.ndarray,
     return pseudolandmarks
 
 
-def analyze_color(img: np.ndarray, mask: np.ndarray, output: str) -> None:
+def analyze_color(img: np.ndarray, mask: np.ndarray, output: str, basename: str) -> None:
     """ Analyze color channels and save histograms """
     try:
         pcv.analyze.color(rgb_img=img, labeled_mask=mask, colorspaces='all')
@@ -95,7 +95,7 @@ def analyze_color(img: np.ndarray, mask: np.ndarray, output: str) -> None:
         plt.title("Color Channel Histogram")
         plt.xlabel("Pixel Intensity")
         plt.ylabel("Proportion")
-        plt.savefig(os.path.join(output, "color_histogram.png"))
+        plt.savefig(os.path.join(output, f"{basename}_color_histogram.png"))
         plt.close()
     except Exception as e:
         print(f"Error in analyze_color: {e}")
@@ -111,39 +111,27 @@ def bayes(img: np.ndarray) -> np.ndarray:
     return plant_mask
 
 
-def process_image(img_path: str, output_dir: str, transformation: str) -> None:
+def process_image(img_path: str, output_dir: str) -> None:
     """ Process a single image with the specified transformation """
     try:
-        os.makedirs(output_dir, exist_ok=True)
         img, _, _ = pcv.readimage(filename=img_path)
+        basename = os.path.basename(img_path).split(".")[0]
 
-        if transformation == "gaussian_blur":
-            result = gaussian_blur(img)
-        elif transformation == "mask_objects":
-            mask = gaussian_blur(img)
-            result = mask_objects(img, mask)
-        elif transformation == "remove_black":
-            result = remove_black(img)
-        elif transformation == "roi":
-            mask = gaussian_blur(img)
-            result = roi(img, mask)
-        elif transformation == "analyze_object":
-            mask = gaussian_blur(img)
-            result = analyze_object(img, mask)
-        elif transformation == "create_pseudolandmarks":
-            mask = gaussian_blur(img)
-            result = create_pseudolandmarks_image(img, mask)
-        elif transformation == "analyze_color":
-            mask = gaussian_blur(img)
-            analyze_color(img, mask, output_dir)
-            print("Color analysis saved.")
-            return
-        else:
-            raise ValueError("Unsupported transformation selected.")
-
-        pcv.print_image(result,
-                        os.path.join(output_dir, f"{transformation}.png"))
-        print(f"{transformation} result saved in {output_dir}.")
+        mask = gaussian_blur(img)
+        pcv.print_image(mask, os.path.join(output_dir, f"{basename}_mask.png"))
+        result = mask_objects(img, mask)
+        pcv.print_image(result, os.path.join(output_dir, f"{basename}_masked.png"))
+        result = roi(img, mask)
+        pcv.print_image(result, os.path.join(output_dir, f"{basename}_roi.png"))
+        result = analyze_object(img, mask)
+        pcv.print_image(result, os.path.join(output_dir, f"{basename}_analysis.png"))
+        result = create_pseudolandmarks_image(img, mask)
+        pcv.print_image(result, os.path.join(output_dir, f"{basename}_landmarks.png"))
+        analyze_color(img, mask, output_dir, basename)
+        mask = bayes(img)
+        result = mask_objects(img, mask)
+        pcv.print_image(result, os.path.join(output_dir, f"{basename}_bayes.png"))
+        print(f"Transformation results saved in {output_dir}.")
     except Exception as e:
         print(f"Error processing image: {e}")
         raise
@@ -154,31 +142,22 @@ def main():
     parser = argparse.ArgumentParser(description="Image Transformation Script")
     parser.add_argument("input", help="Path to the input image or directory.")
     parser.add_argument("output", help="Directory to save results.")
-    parser.add_argument(
-        "--transformation",
-        choices=[
-            "gaussian_blur",
-            "mask_objects",
-            "remove_black",
-            "roi",
-            "analyze_object",
-            "create_pseudolandmarks",
-            "analyze_color",
-        ],
-        required=True,
-        help="Transformation to apply.",
-    )
-
     args = parser.parse_args()
 
+    try:
+        os.system("rm -rf " + args.output)
+        os.makedirs(args.output, exist_ok=True)
+    except Exception as e:
+        print(f"Error creating output directory: {e}")
+        raise
+
     if os.path.isfile(args.input):
-        process_image(args.input, args.output, args.transformation)
+        process_image(args.input, args.output)
     elif os.path.isdir(args.input):
         for file in os.listdir(args.input):
             if file.lower().endswith(("jpg", "jpeg", "png")):
                 process_image(os.path.join(args.input, file),
-                              args.output,
-                              args.transformation)
+                              args.output)
     else:
         print("Invalid input path. Provide an image or directory.")
 
