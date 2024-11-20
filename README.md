@@ -60,13 +60,13 @@ python Augmentation.py --dir <dirname>
 
 ### Part 3: Image transformation
 
-```python
+```
 python Transformation.py <dirname>
 ```
 
 ### Part 4: Classification
 
-```python
+```
 python Train.py <dirname>
 python Predict.py <img_path>
 ```
@@ -75,7 +75,7 @@ python Predict.py <img_path>
 
 The first three parts of the project emphasize the importance of our dataset choice.
 
-We artificially expand our original dataset through [augmentation.py](http://augmentation.py) (adding noises, adjusting luminosity, rotate, flip, etc). 
+We artificially expand our original dataset through augmentation.py (adding noises, adjusting luminosity, rotate, flip, etc). 
 
 Introducing more diversity in the dataset **improves overall performance** and prevents **overfitting problem** (poor generalization to new unseen data).
 
