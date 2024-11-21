@@ -7,9 +7,6 @@ Grape/
 Apple/
 augmented_directory/
 
-image*.JPG
-bayes_*/
+results/
 
-# Est-ce qu'on laisserait pas les modeles ?
-# *.keras 
-# conf_matrix.png
+image*.JPG

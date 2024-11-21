@@ -169,8 +169,8 @@ def process_image(
                 plt.title(title)
                 plt.axis('off')
             plt.tight_layout()
-            plt.show()
             plt.savefig(os.path.join(output_dir, f"{bname}_results.png"))
+            plt.show()
     except Exception as e:
         print(f"Error processing image: {e}")
         raise
