@@ -68,7 +68,7 @@ The first three parts of the project emphasize the importance of our dataset cho
 
 First, we use data visualization to check the quality of our dataset and spot potential imbalance.
 
-![distribution_apple](images/leaffliction_data_visualization.webp)
+![distribution_apple](./readme_images/leaffliction_data_visualization.webp)
 
 We artificially expand our original dataset through augmentation.py (adding noises, adjusting luminosity, rotate, flip, etc). 
 
@@ -76,13 +76,13 @@ Introducing more diversity in the dataset **improves overall performance** and p
 
 In the third part, we apply several transformation on our image through transformation.py in order to extract the meaningful data from the input.
 
-![transformation_output](./images/leaffliction_transformation.webp)
+![transformation_output](./readme_images/leaffliction_transformation.webp)
 
 In the fourth part, we also normalize our data prior sending it to the model, by dividing images pixel by 255, scaling them between 0 and 1.
 
 We also produce a color histogram to emphasize which channels are relevant.
 
-![transformation_channel_histogram](images/leaffliction_channel_histogram.webp)
+![transformation_channel_histogram](readme_images/leaffliction_channel_histogram.webp)
 
 ```python
 # in Train.py 
@@ -143,6 +143,7 @@ More about ADAM here : https://keras.io/api/optimizers/adam/
 
 **Output**
 
+![predict_output](readme_images/leaffliction_predict_output.webp)
 
 
 ## RESSOURCES
