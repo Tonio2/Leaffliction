@@ -66,11 +66,23 @@ python predict.py python predict.py <image_path> <model_path> <Fruit> <label_fil
 
 The first three parts of the project emphasize the importance of our dataset choice.
 
+First, we use data visualization to check the quality of our dataset and spot potential imbalance.
+
+![distribution_apple](images/leaffliction_data_visualization.webp)
+
 We artificially expand our original dataset through augmentation.py (adding noises, adjusting luminosity, rotate, flip, etc). 
 
 Introducing more diversity in the dataset **improves overall performance** and prevents **overfitting problem** (poor generalization to new unseen data).
 
+In the third part, we apply several transformation on our image through transformation.py in order to extract the meaningful data from the input.
+
+![transformation_output](./images/leaffliction_transformation.webp)
+
 In the fourth part, we also normalize our data prior sending it to the model, by dividing images pixel by 255, scaling them between 0 and 1.
+
+We also produce a color histogram to emphasize which channels are relevant.
+
+![transformation_channel_histogram](images/leaffliction_channel_histogram.webp)
 
 ```python
 # in Train.py 
@@ -128,6 +140,10 @@ The **output** of the classifier is a vector of 4 values,  each representing the
 Finally, we use the algorithm **Adaptative Moment Estimation (ADAM)** to adjust the model’s weights in order to minimize the BCE loss.
 
 More about ADAM here : https://keras.io/api/optimizers/adam/
+
+**Output**
+
+
 
 ## RESSOURCES
 
